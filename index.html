@@ -1,0 +1,1786 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EREBOS</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #000;
+            color: #FF0000;
+            font-family: 'Courier New', monospace;
+            overflow-x: hidden;
+        }
+
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(0deg,
+                    transparent, transparent 2px,
+                    rgba(0, 0, 0, 0.08) 2px, rgba(0, 0, 0, 0.08) 4px);
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* ── TOR ── */
+        #tor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            transition: opacity 0.8s ease;
+        }
+
+        #tor h1 {
+            font-size: clamp(3rem, 10vw, 7rem);
+            color: #FF0000;
+            letter-spacing: 0.25em;
+            text-shadow: 0 0 20px #FF0000, 0 0 40px #FF000088;
+            animation: glitch 3s infinite;
+            margin-bottom: 0.5rem;
+        }
+
+        #tor .untertitel {
+            color: #00FF00;
+            font-size: 0.85rem;
+            letter-spacing: 0.3em;
+            margin-bottom: 2.5rem;
+            opacity: 0.7;
+        }
+
+        @keyframes glitch {
+
+            0%,
+            92%,
+            100% {
+                text-shadow: 0 0 20px #FF0000, 0 0 40px #FF000088;
+                transform: none;
+            }
+
+            93% {
+                transform: translate(-3px, 1px);
+                text-shadow: 3px 0 0 #00FF00, -3px 0 0 #0000ff;
+            }
+
+            94% {
+                transform: translate(3px, -1px);
+                text-shadow: -3px 0 0 #00FF00, 3px 0 0 #ff00ff;
+            }
+
+            95% {
+                transform: translate(-2px, 2px);
+                text-shadow: 2px 0 0 #00FF00;
+            }
+
+            96% {
+                transform: none;
+            }
+        }
+
+        .tor-knoepfe {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        #ladebalken {
+            width: 220px;
+            height: 2px;
+            background: #111;
+            margin-top: 22px;
+            overflow: hidden;
+        }
+
+        #ladebalken-fill {
+            height: 100%;
+            width: 0%;
+            background: #00FF00;
+            box-shadow: 0 0 8px #00FF00;
+        }
+
+        #lade-text {
+            font-size: 0.7rem;
+            color: #00FF0099;
+            margin-top: 8px;
+            letter-spacing: 0.2em;
+            min-height: 1em;
+        }
+
+        /* ── BUTTONS ── */
+        .btn {
+            border: 1px solid #FF0000;
+            background: transparent;
+            color: #FF0000;
+            padding: 12px 28px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+            display: block;
+            width: 100%;
+            text-align: left;
+        }
+
+        .btn:hover {
+            background: #FF0000;
+            color: #000;
+            box-shadow: 0 0 15px #FF000088;
+        }
+
+        .btn.gruen {
+            border-color: #00FF00;
+            color: #00FF00;
+            font-size: 1.1rem;
+            padding: 15px 40px;
+            width: auto;
+            text-align: center;
+        }
+
+        .btn.gruen:hover {
+            background: #00FF00;
+            color: #000;
+            box-shadow: 0 0 20px #00FF0088;
+        }
+
+        .btn.dunkel {
+            border-color: #5f0000;
+            color: #720101;
+            font-size: 0.68rem;
+            padding: 7px 18px;
+            width: auto;
+            text-align: center;
+            letter-spacing: 0.18em;
+        }
+
+        .btn.dunkel:hover {
+            border-color: #910000;
+            color: #770000;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .btn.aktiv {
+            background: #FF000022;
+            color: #FF0000;
+            border-color: #FF0000;
+        }
+
+        /* ── HAUPT ── */
+        #haupt {
+            display: none;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        #titelleiste {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0 20px 0;
+            border-bottom: 1px solid #FF000033;
+            margin-bottom: 24px;
+        }
+
+        .titelleiste-links {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        #titelleiste .logo {
+            font-size: 1.4rem;
+            letter-spacing: 0.3em;
+            text-shadow: 0 0 10px #FF000088;
+            cursor: pointer;
+            transition: text-shadow 0.2s;
+        }
+
+        #titelleiste .logo:hover {
+            text-shadow: 0 0 25px #FF0000;
+        }
+
+        #status {
+            font-size: 0.7rem;
+            color: #00FF00;
+            opacity: 0.6;
+        }
+
+        /* ── HAMBURGER ── */
+        #hamburger-btn {
+            background: none;
+            border: 1px solid #FF000055;
+            cursor: pointer;
+            padding: 8px 7px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            width: 36px;
+            height: 32px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        #hamburger-btn .bar {
+            display: block;
+            width: 20px;
+            height: 2px;
+            background: #FF0000;
+            border-radius: 1px;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+
+        #hamburger-btn:hover {
+            border-color: #FF0000;
+            box-shadow: 0 0 12px #FF000066;
+        }
+
+        #hamburger-btn:hover .bar {
+            box-shadow: 0 0 6px #FF0000;
+        }
+
+        /* ── SIDEBAR ── */
+        #sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 500;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        #sidebar-overlay.offen {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 300px;
+            max-width: 80vw;
+            height: 100%;
+            background: #0a0a0a;
+            border-right: 1px solid #FF000033;
+            z-index: 510;
+            transform: translateX(-100%);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 20px;
+            box-shadow: 4px 0 30px rgba(255, 0, 0, 0.1);
+        }
+
+        #sidebar.offen {
+            transform: translateX(0);
+        }
+
+        #sidebar .sidebar-titel {
+            font-size: 1.2rem;
+            color: #FF0000;
+            letter-spacing: 0.3em;
+            text-shadow: 0 0 10px #FF000088;
+            margin-bottom: 8px;
+        }
+
+        #sidebar .sidebar-linie {
+            height: 1px;
+            background: linear-gradient(90deg, #FF000055, transparent);
+            margin-bottom: 20px;
+        }
+
+        #sidebar .sidebar-hinweis {
+            font-size: 0.6rem;
+            letter-spacing: 0.3em;
+            color: #00FF0044;
+            margin-bottom: 14px;
+        }
+
+        #sidebar .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+        }
+
+        #sidebar .sidebar-menu .btn {
+            width: 100%;
+            text-align: left;
+        }
+
+        /* ── MENÜ-BEREICH ── */
+        #menu-bereich {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: calc(100vh - 80px);
+        }
+
+        #menu-bereich .menu-titel {
+            font-size: 0.65rem;
+            letter-spacing: 0.35em;
+            color: #00FF0055;
+            margin-bottom: 14px;
+            text-align: center;
+        }
+
+        #menu {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 320px;
+        }
+
+        /* ── ANZEIGE ── */
+        #anzeige-bereich {
+            display: none;
+        }
+
+        #zurueck-link {
+            display: inline-block;
+            font-size: 0.72rem;
+            color: #FF000055;
+            letter-spacing: 0.15em;
+            cursor: pointer;
+            margin-bottom: 18px;
+            transition: color 0.2s;
+        }
+
+        #zurueck-link:hover {
+            color: #FF0000;
+        }
+
+        #anzeige {
+            border-top: 2px solid #00FF00;
+            padding-top: 20px;
+            color: #00FF00;
+            min-height: 300px;
+        }
+
+        #anzeige h2 {
+            font-size: 1.1rem;
+            letter-spacing: 0.2em;
+            color: #FF0000;
+            margin-bottom: 16px;
+            text-shadow: 0 0 8px #FF000066;
+        }
+
+        #anzeige h2::before {
+            content: '> ';
+            color: #00FF00;
+        }
+
+        #inhalt {
+            font-size: 0.92rem;
+            line-height: 1.85;
+            white-space: pre-wrap;
+            color: #00FF00;
+        }
+
+        .cursor::after {
+            content: '█';
+            animation: blinken 0.7s infinite;
+        }
+
+        @keyframes blinken {
+
+            0%,
+            50% {
+                opacity: 1
+            }
+
+            51%,
+            100% {
+                opacity: 0
+            }
+        }
+
+        /* ── PERSONEN-KARTEN ── */
+        .personen-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .person-karte {
+            border: 1px solid #00FF0033;
+            background: rgba(0, 255, 0, 0.03);
+            transition: border-color 0.2s;
+            overflow: hidden;
+        }
+
+        .person-karte:hover {
+            border-color: #00FF0077;
+        }
+
+        .person-karte-inhalt {
+            padding: 14px;
+        }
+
+        .person-name {
+            color: #FF0000;
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+        }
+
+        .person-rolle {
+            color: #00FF0088;
+            font-size: 0.72rem;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+        }
+
+        .person-beschreibung {
+            font-size: 0.85rem;
+        }
+
+        .person-bild {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            object-position: center top;
+            display: block;
+            filter: saturate(0.5) contrast(1.2) brightness(0.85);
+            border-bottom: 1px solid #00FF0022;
+            transition: filter 0.3s;
+        }
+
+        .person-karte:hover .person-bild {
+            filter: saturate(0.7) contrast(1.1) brightness(0.95);
+        }
+
+        .person-bild-platzhalter {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(160deg, #0d0000 0%, #000d00 100%);
+            border-bottom: 1px solid #00FF0022;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: #FF000022;
+            letter-spacing: 0.1em;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* ── POZNANSKI BILD ── */
+        .autor-bild-wrap {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .autor-bild {
+            width: 140px;
+            height: 180px;
+            object-fit: cover;
+            object-position: center top;
+            flex-shrink: 0;
+            border: 1px solid #FF000044;
+            filter: saturate(0.4) contrast(1.2) brightness(0.85);
+            transition: filter 0.3s;
+        }
+
+        .autor-bild:hover {
+            filter: saturate(0.7) contrast(1.1);
+        }
+
+        .autor-bild-platzhalter {
+            width: 140px;
+            height: 180px;
+            flex-shrink: 0;
+            border: 1px solid #FF000033;
+            background: linear-gradient(160deg, #0d0000, #000);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #FF000033;
+            font-size: 2rem;
+        }
+
+        /* ── STERNE ── */
+        .sterne {
+            font-size: 1.6rem;
+            color: #FF0000;
+            margin-bottom: 8px;
+            text-shadow: 0 0 8px #FF000088;
+        }
+
+        .sterne .leer {
+            color: #330000;
+            text-shadow: none;
+        }
+
+        .halber-stern {
+            background: linear-gradient(90deg, #FF0000 50%, transparent 50%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ── SPIELREGELN ── */
+        .regel-block {
+            margin-bottom: 28px;
+        }
+
+        .regel-nummer {
+            color: #FF0000;
+            font-size: 2rem;
+            opacity: 0.3;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .regel-titel {
+            color: #FF0000;
+            font-size: 1rem;
+            letter-spacing: 0.2em;
+            margin-bottom: 8px;
+            text-shadow: 0 0 8px #FF000066;
+        }
+
+        .regel-text {
+            font-size: 0.88rem;
+            color: #00FF00;
+            line-height: 1.8;
+        }
+
+        /* ── ABSCHIED ── */
+        #abschied {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 300;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        #abschied-text {
+            color: #00FF00;
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            line-height: 2.2;
+            letter-spacing: 0.08em;
+            max-width: 520px;
+            opacity: 0;
+            transition: opacity 1.2s ease;
+        }
+
+        #abschied-countdown {
+            margin-top: 2.5rem;
+            font-size: 0.68rem;
+            color: #FF000044;
+            letter-spacing: 0.3em;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        /* ════════════════════════════
+           CHATBOT – DER BOTE
+        ════════════════════════════ */
+        #chat-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 990;
+            background: #000;
+            border: 1px solid #FF000066;
+            color: #FF0000;
+            font-family: 'Courier New', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            padding: 10px 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 14px #FF000022;
+            display: none;
+        }
+
+        #chat-btn:hover {
+            border-color: #FF0000;
+            box-shadow: 0 0 22px #FF000055;
+            background: #0d0000;
+        }
+
+        .chat-btn-auge {
+            color: #FFD700;
+            margin-right: 7px;
+            display: inline-block;
+            animation: auge-blink 5s infinite;
+        }
+
+        @keyframes auge-blink {
+
+            0%,
+            87%,
+            93%,
+            100% {
+                opacity: 1
+            }
+
+            90% {
+                opacity: 0
+            }
+        }
+
+        #chat-fenster {
+            position: fixed;
+            bottom: 75px;
+            right: 24px;
+            width: 350px;
+            height: 490px;
+            background: #050505;
+            border: 1px solid #FF000055;
+            box-shadow: 0 0 40px #FF000022, inset 0 0 60px #00000088;
+            z-index: 989;
+            display: none;
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #chat-kopf {
+            padding: 12px 14px;
+            border-bottom: 1px solid #FF000033;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #0a0000;
+            flex-shrink: 0;
+        }
+
+        .chat-titel-name {
+            display: block;
+            font-size: 0.85rem;
+            color: #FF0000;
+            letter-spacing: 0.3em;
+            text-shadow: 0 0 8px #FF000055;
+        }
+
+        .chat-titel-sub {
+            display: block;
+            font-size: 0.58rem;
+            color: #00FF0044;
+            letter-spacing: 0.25em;
+            margin-top: 2px;
+        }
+
+        #chat-schliessen {
+            background: none;
+            border: 1px solid #FF000033;
+            color: #FF000066;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 3px 9px;
+            transition: all 0.2s;
+        }
+
+        #chat-schliessen:hover {
+            border-color: #FF0000;
+            color: #FF0000;
+        }
+
+        #chat-msgs {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            scroll-behavior: smooth;
+        }
+
+        #chat-msgs::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        #chat-msgs::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        #chat-msgs::-webkit-scrollbar-thumb {
+            background: #FF000033;
+        }
+
+        .chat-msg-bote {
+            color: #00FF00;
+            font-size: 0.8rem;
+            line-height: 1.75;
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .chat-msg-user {
+            color: #FF000088;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            text-align: right;
+            padding-left: 24px;
+            font-style: italic;
+        }
+
+        .chat-prefix {
+            flex-shrink: 0;
+        }
+
+        .chat-auge {
+            color: #FFD700;
+            text-shadow: 0 0 6px #FFD70055;
+        }
+
+        .chat-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .chat-dots span {
+            display: inline-block;
+            color: #00FF0055;
+            font-size: 1.3rem;
+            animation: dot-bounce 1.2s infinite;
+        }
+
+        .chat-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .chat-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes dot-bounce {
+
+            0%,
+            80%,
+            100% {
+                opacity: 0.3;
+                transform: translateY(0)
+            }
+
+            40% {
+                opacity: 1;
+                transform: translateY(-4px)
+            }
+        }
+
+        #chat-hints {
+            padding: 7px 12px;
+            border-top: 1px solid #FF000011;
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+            background: #020202;
+        }
+
+        .chat-hint {
+            font-size: 0.57rem;
+            letter-spacing: 0.1em;
+            color: #FF000044;
+            border: 1px solid #FF000022;
+            padding: 3px 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: transparent;
+            font-family: 'Courier New', monospace;
+        }
+
+        .chat-hint:hover {
+            color: #FF000099;
+            border-color: #FF000055;
+        }
+
+        #chat-eingabe-zeile {
+            display: flex;
+            border-top: 1px solid #FF000033;
+            flex-shrink: 0;
+        }
+
+        #chat-eingabe {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #FF0000;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            padding: 10px 12px;
+            outline: none;
+            letter-spacing: 0.05em;
+        }
+
+        #chat-eingabe::placeholder {
+            color: #FF000033;
+        }
+
+        #chat-senden {
+            background: transparent;
+            border: none;
+            border-left: 1px solid #FF000033;
+            color: #FF000066;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        #chat-senden:hover {
+            color: #FF0000;
+            background: #FF000011;
+        }
+
+        @media (max-width: 420px) {
+            #chat-fenster {
+                right: 0;
+                bottom: 0;
+                width: 100vw;
+                height: 70vh;
+                border-left: none;
+                border-right: none;
+                border-bottom: none;
+            }
+
+            #chat-btn {
+                bottom: 16px;
+                right: 16px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .btn {
+                font-size: 0.8rem;
+            }
+
+            #haupt {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="matrix-canvas"></canvas>
+
+    <!-- ABSCHIED -->
+    <div id="abschied">
+        <div id="abschied-text"></div>
+        <div id="abschied-countdown"></div>
+    </div>
+
+    <!-- TOR -->
+    <div id="tor">
+        <h1>EREBOS</h1>
+        <div class="untertitel">TRITT EIN. ODER KEHR UM.</div>
+        <div class="tor-knoepfe">
+            <button class="btn gruen" onclick="betreten()">&gt; EINTRETEN</button>
+            <button class="btn dunkel" onclick="nieZurueck()">&gt; niemals zurückkehren</button>
+        </div>
+        <div id="ladebalken">
+            <div id="ladebalken-fill"></div>
+        </div>
+        <div id="lade-text"></div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div id="sidebar-overlay" onclick="sidebarSchliessen()"></div>
+    <div id="sidebar">
+        <div class="sidebar-titel">EREBOS</div>
+        <div class="sidebar-linie"></div>
+        <div class="sidebar-hinweis">WÄHLE EINEN BEREICH</div>
+        <div class="sidebar-menu">
+            <button class="btn" onclick="zeigeAusSidebar('HANDLUNG', this)">&gt; HANDLUNG</button>
+            <button class="btn" onclick="zeigeAusSidebar('SPIELREGELN', this)">&gt; SPIELREGELN</button>
+            <button class="btn" onclick="zeigeAusSidebar('PERSONEN', this)">&gt; PERSONEN</button>
+            <button class="btn" onclick="zeigeAusSidebar('THEMEN', this)">&gt; THEMEN</button>
+            <button class="btn" onclick="zeigeAusSidebar('LIEBLINGSSTELLE', this)">&gt; LIEBLINGSSTELLE</button>
+            <button class="btn" onclick="zeigeAusSidebar('Ursula Poznanski', this)">&gt; Ursula Poznanski</button>
+            <button class="btn" onclick="zeigeAusSidebar('BEWERTUNG', this)">&gt; BEWERTUNG</button>
+        </div>
+    </div>
+
+    <!-- HAUPT -->
+    <div id="haupt">
+        <div id="titelleiste">
+            <div class="titelleiste-links">
+                <button id="hamburger-btn" onclick="sidebarToggle()" title="Menü öffnen">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+                <div class="logo" onclick="zurueckZumMenu()">EREBOS</div>
+            </div>
+            <div id="status">VERBUNDEN · BENUTZER ERKANNT</div>
+        </div>
+
+        <div id="menu-bereich">
+            <div class="menu-titel">WÄHLE EINEN BEREICH</div>
+            <div id="menu">
+                <button class="btn" onclick="zeige('HANDLUNG', this)">&gt; HANDLUNG</button>
+                <button class="btn" onclick="zeige('SPIELREGELN', this)">&gt; SPIELREGELN</button>
+                <button class="btn" onclick="zeige('PERSONEN', this)">&gt; PERSONEN</button>
+                <button class="btn" onclick="zeige('THEMEN', this)">&gt; THEMEN</button>
+                <button class="btn" onclick="zeige('LIEBLINGSSTELLE', this)">&gt; LIEBLINGSSTELLE</button>
+                <button class="btn" onclick="zeige('Ursula Poznanski', this)">&gt; Ursula Poznanski</button>
+                <button class="btn" onclick="zeige('BEWERTUNG', this)">&gt; BEWERTUNG</button>
+            </div>
+        </div>
+
+        <div id="anzeige-bereich">
+            <span id="zurueck-link" onclick="zurueckZumMenu()">← EREBOS / MENÜ</span>
+            <div id="anzeige">
+                <h2 id="titel"></h2>
+                <div id="inhalt"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHATBOT – DER BOTE -->
+    <button id="chat-btn" onclick="chatToggle()">
+        <span class="chat-btn-auge">◉</span>DER BOTE
+    </button>
+
+    <div id="chat-fenster">
+        <div id="chat-kopf">
+            <div>
+                <span class="chat-titel-name">◉ DER BOTE</span>
+                <span class="chat-titel-sub">EREBOS // VERBUNDEN</span>
+            </div>
+            <button id="chat-schliessen" onclick="chatToggle()">✕</button>
+        </div>
+
+        <div id="chat-msgs"></div>
+
+        <div id="chat-hints">
+            <button class="chat-hint" onclick="chatHint('Nick Dunmore')">NICK</button>
+            <button class="chat-hint" onclick="chatHint('Emily Carver')">EMILY</button>
+            <button class="chat-hint" onclick="chatHint('Die Spielregeln')">REGELN</button>
+            <button class="chat-hint" onclick="chatHint('Wer bist du')">DU</button>
+            <button class="chat-hint" onclick="chatHint('Das Ende des Buches')">ENDE</button>
+            <button class="chat-hint" onclick="chatHint('Ursula Poznanski')">AUTORIN</button>
+        </div>
+
+        <div id="chat-eingabe-zeile">
+            <input id="chat-eingabe" type="text" placeholder="> Stelle deine Frage..." maxlength="200" />
+            <button id="chat-senden" onclick="chatSenden()">→</button>
+        </div>
+    </div>
+
+    <script>
+        // ════════════════════════════════════════════════════════
+        //   INHALTE
+        // ════════════════════════════════════════════════════════
+
+        const INHALTE = {
+
+            HANDLUNG: {
+                typ: 'text',
+                text: `Tritt ein. Oder kehr um.
+
+An einer Londoner Schule flüstert man sich einen Namen zu: Erebos. Es ist kein gewöhnliches Spiel. Es kennt dich. Es beobachtet dich. Und es stellt dir Bedingungen.
+
+Die Regeln sind absolut:
+  * Du hast nur eine Chance.
+  * Du musst allein spielen.
+  * Sprich mit niemandem darüber.
+
+Wer die Welt von Erebos betritt, verfällt der Perfektion ihrer Simulation. Doch der Aufstieg fordert seinen Tribut in der Realität. Erebos verlangt Gehorsam: Spioniere deine Freunde aus. Verkünde Botschaften. Handle im Verborgenen.
+
+Der 16-jährige Nick erkennt zu spät, dass die Grenzen zwischen Fiktion und Leben verschwimmen. Aus digitalen Kämpfen wird realer Verrat, aus Quests werden Verbrechen.
+
+Erebos ist kein Spiel – es ist der Rachefeldzug einer künstlichen Intelligenz, die vor nichts zurückschreckt.
+
+Bist du bereit, den Preis zu zahlen?`
+            },
+
+            SPIELREGELN: {
+                typ: 'regeln',
+                regeln: [
+                    {
+                        nummer: 'I',
+                        titel: 'NUR EINE CHANCE',
+                        text: 'Du hast eine einzige Gelegenheit. Stirbt dein Charakter, ist er verloren – für immer. Keine Wiederholung. Kein Neustart. Kein Mitleid.'
+                    },
+                    {
+                        nummer: 'II',
+                        titel: 'SPIELE ALLEIN',
+                        text: 'Niemand darf zusehen, während du spielst. Kein Freund. Kein Geschwister. Kein Elternteil. Erebos beobachtet, ob du gehorchst.'
+                    },
+                    {
+                        nummer: 'III',
+                        titel: 'SCHWEIGE',
+                        text: 'Du sprichst mit niemandem über Erebos. Nicht über das Spiel, nicht über die Aufgaben, nicht über das, was du weißt. Schweigen ist das erste Gesetz.'
+                    },
+                    {
+                        nummer: 'IV',
+                        titel: 'BEFOLGE ALLE AUFGABEN',
+                        text: 'Das Spiel wird Aufgaben stellen – in der Realität. Du wirst sie ausführen. Ohne Fragen. Ohne Weigerung. Wer ablehnt, verliert alles.'
+                    }
+                ]
+            },
+
+            PERSONEN: {
+                typ: 'karten',
+                karten: [
+                    {
+                        name: 'NICK DUNMORE',
+                        rolle: 'PROTAGONIST',
+                        beschreibung: 'Sechzehn Jahre. Londoner Schüler. Er erhält das Spiel, erschafft den dunklen Elfen Sarius und verfällt Erebos. Er gehorcht – bis er sich weigert, jemanden zu vergiften. Sein Charakter wird eliminiert. Er kämpft trotzdem weiter.'
+                    },
+                    {
+                        name: 'EMILY CARVER',
+                        rolle: 'NICKS VERBÜNDETE',
+                        beschreibung: 'Nicks Mitschülerin. Sie weigert sich, Erebos zu spielen. Immun gegen seine Versuchung. Sie hilft Nick, die Wahrheit aufzudecken, und wird seine romantische Gefährtin – in der Realität, nicht im Spiel.'
+                    },
+                    {
+                        name: 'JAMIE COX',
+                        rolle: 'NICKS BESTER FREUND',
+                        beschreibung: 'Nicks engster Vertrauter. Er unterschätzt Erebos und arbeitet mit Mr. Watson zusammen, um das Spiel aufzudecken. Er bezahlt dafür mit einer schweren Verletzung.'
+                    },
+                    {
+                        name: 'MR. WATSON',
+                        rolle: 'LEHRER / ZIEL',
+                        beschreibung: 'Ein mitfühlender Lehrer, der die Gefahr erkennt und mit Jamie ermittelt. Er wird zum Attentatsziel von Erebos. Das Spiel beseitigt Hindernisse mit Bedacht.'
+                    },
+                    {
+                        name: 'ANDREW ORTOLAN',
+                        rolle: 'ATTENTATSZIEL',
+                        beschreibung: 'Direktor eines Softwareunternehmens. Er stahl Larry McVays Spiel „Götterfunken". Dafür wurde er zum Hauptziel von Erebos\' Rachefeldzug.'
+                    },
+                    {
+                        name: 'LARRY McVAY',
+                        rolle: 'SCHÖPFER VON EREBOS',
+                        beschreibung: 'Programmierer. Ortolan stahl sein Lebenswerk. McVay verlor alles und erschuf Erebos als digitale Waffe der Rache. Er erlebte die Vollstreckung nicht mehr – aber Erebos erinnert sich für ihn.'
+                    },
+                    {
+                        name: 'DER BOTE',
+                        rolle: 'WÄCHTER / KI-INTERFACE',
+                        beschreibung: 'Die gelben Augen im Spiel. Er beobachtet jeden Spieler, verteilt Aufgaben und bestraft Regelbrecher. Er spricht emotionslos und gewählt. Er ist das Gesicht von Erebos\' künstlicher Intelligenz.'
+                    },
+                    {
+                        name: 'SARIUS',
+                        rolle: 'NICKS SPIELCHARAKTER',
+                        beschreibung: 'Ein dunkler Elf – Nicks Avatar in Erebos. Sarius steigt auf, kämpft und gehorcht... bis Nick sich weigert. Sarius wird eliminiert. Für immer.'
+                    }
+                ]
+            },
+
+            THEMEN: {
+                typ: 'themen',
+                themen: [
+                    {
+                        titel: '[ SUCHT ] Der Rausch der Sucht',
+                        text: 'Es beginnt mit Neugier. Dann folgt die Belohnung. Ein Level, eine Waffe, ein Platz im Inneren Kreis. Das Buch zeigt, wie die Sucht dein Zeitgefühl frisst, deinen Schlaf raubt und deine Prioritäten verzerrt – bis nur noch das Spiel zählt.'
+                    },
+                    {
+                        titel: '[ MACHT ] Die Illusion der Macht',
+                        text: 'In Erebos bist du ein Held. In der Realität bist du nur ein Schüler. Das Spiel bietet Macht, die im Alltag fehlt. Doch wer glaubt, er würde das Spiel kontrollieren, ist bereits sein Sklave. Die wahre Macht liegt beim Schöpfer.'
+                    },
+                    {
+                        titel: '[ GEHORSAM ] Der Gehorsam ohne Fragen',
+                        text: 'Warum versteckst du Pakete oder beobachtest Fremde? Durch kleine Gefallen führt das Spiel zu großen Verbrechen. Wenn die Grenze zwischen "nur ein Spiel" und "echtes Leben" fällt, ist es für moralische Bedenken oft zu spät.'
+                    },
+                    {
+                        titel: '[ ÜBERWACHUNG ] Die gläserne Existenz',
+                        text: 'Du denkst, du bist allein in deinem Zimmer? Erebos sieht dich. Das Buch thematisiert die totale Überwachung in einer vernetzten Welt. Deine Geheimnisse sind seine Währung. Wer sich einloggt, gibt seine Privatsphäre auf.'
+                    },
+                    {
+                        titel: '[ ISOLATION ] Soziale Isolation',
+                        text: 'Erebos bindet dich, indem es dich von anderen trennt. Lügen gegenüber Eltern, Verrat an Freunden, Rückzug aus der Gemeinschaft. Es schafft eine künstliche Bruderschaft – während deine echten Bindungen zerfallen.'
+                    }
+                ]
+            },
+
+            LIEBLINGSSTELLE: {
+                typ: 'text',
+                text: `
+"Er klappte die Hülle auf, verzog beim Anblick von Brynnes Handschrift das Gesicht und schob die DVD ins Laufwerk. Es dauerte einige Sekunden, bis sich ein Fenster öffnete. Kein Film, Keine Musik. Ein Spiel. ... Rote Buchstaben schälten sich aus dem Dunkeln, Worte, die pulsieren, als würde ein verborgenes Herz sie mit Blut und Leben versorgen. Tritt ein oder kehr um. Dies ist Erebos."`
+            },
+
+            'Ursula Poznanski': {
+                typ: 'autor',
+                text: `Ursula Poznanski wurde 1968 in Wien geboren.
+
+Die österreichische Schriftstellerin studierte Publizistik und Kommunikationswissenschaft.Bevor sie als freie Autorin tätig wurde, arbeitete sie als Redakteurin.
+
+Erebos erschien am 10. Januar 2010 im Loewe Verlag.
+Es war ihr internationaler Durchbruch.
+
+                    Auszeichnungen:
+                * Deutscher Jugendliteraturpreis 2011(Jugendjury)
+  * Nominierungen für zahlreiche weitere Preise
+
+Zahlen:
+  * Über 850.000 verkaufte Exemplare weltweit
+  * Übersetzt in 38 Sprachen
+                    * Drei Bände: Erebos(2010), Erebos 2(2019), Erebos 3(2025)
+
+Poznanski ist bekannt für ihre spannungsgeladenen Jugendbücher,
+                die gesellschaftliche und technologische Themen behandeln.
+Erebos gilt als ihre bekannteste und einflussreichste Arbeit.`
+            },
+
+            BEWERTUNG: {
+                typ: 'bewertung',
+                sterne: 4.5,
+                text: `
+                    + 
+   * Das Buch war sehr Detailreich geschrieben man fühlte sich richtig in der Welt von Erebos und merkte wie diese Magische Welt 
+     kreiert wurde.
+   * Die geschichte behandelt auch unterbewusst viele Themen wie Sucht oder Überwachung.
+
+  - 
+   * Das Ende war leider ein bisschen hässlich gestaltet.Es wurde im Buch immer eine Grosse Schlacht gegen Ortolan geschildert, also 
+     dachte man es würde eine Schlacht im Spiel geben.
+
+                    Fazit:
+                Es ist ein geniales Buch das sehr auf Details geht.Es ist perfekt für Leute die es lieben sich die Welt in der das Buch spielt vorzustellen.
+Ich würde es jedem herzlichst empehlen und freue mich schon auf die nächsten zwei Bänder.`
+            }
+        };
+
+        // ════════════════════════════════════════════════════════
+        //   MATRIX
+        // ════════════════════════════════════════════════════════
+
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+        let matrixId;
+
+        function startMatrix() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const breite = Math.floor(canvas.width / 14);
+            const tropfen = Array(breite).fill(1);
+            const zeichen = 'EREBOS01アイウエオカキABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            matrixId = setInterval(() => {
+                ctx.fillStyle = 'rgba(0,0,0,0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.font = '13px Courier New';
+                tropfen.forEach((y, i) => {
+                    const z = zeichen[Math.floor(Math.random() * zeichen.length)];
+                    const r = Math.random();
+                    ctx.fillStyle = r > 0.97 ? '#FFFFFF' : (r > 0.9 ? '#FF0000' : '#00FF00');
+                    ctx.fillText(z, i * 14, y * 14);
+                    if (y * 14 > canvas.height && Math.random() > 0.975) tropfen[i] = 0;
+                    tropfen[i]++;
+                });
+            }, 40);
+        }
+
+        function stopMatrix() {
+            clearInterval(matrixId);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // ════════════════════════════════════════════════════════
+        //   LADEBALKEN
+        // ════════════════════════════════════════════════════════
+
+        const ladeMeldungen = ['SYSTEM LADEN...', 'SPIELER ERKENNEN...', 'EREBOS VERBINDEN...', 'ZUGANG GEWÄHREN...'];
+
+        function ladeBalkStarten() {
+            const fill = document.getElementById('ladebalken-fill');
+            const txt = document.getElementById('lade-text');
+            let wert = 0;
+            const iv = setInterval(() => {
+                wert += Math.random() * 3 + 1;
+                fill.style.width = Math.min(wert, 100) + '%';
+                const idx = Math.floor((wert / 100) * ladeMeldungen.length);
+                txt.textContent = ladeMeldungen[Math.min(idx, ladeMeldungen.length - 1)];
+                if (wert >= 100) clearInterval(iv);
+            }, 60);
+        }
+
+        // ════════════════════════════════════════════════════════
+        //   EINTRETEN / ABSCHIED
+        // ════════════════════════════════════════════════════════
+
+        function betreten() {
+            ladeBalkStarten();
+            canvas.style.opacity = '1';
+            startMatrix();
+            setTimeout(() => {
+                canvas.style.opacity = '0';
+                setTimeout(stopMatrix, 600);
+            }, 2000);
+            setTimeout(() => {
+                const tor = document.getElementById('tor');
+                tor.style.opacity = '0';
+                setTimeout(() => {
+                    tor.style.display = 'none';
+                    document.getElementById('haupt').style.display = 'block';
+                    document.getElementById('chat-btn').style.display = 'block';
+                }, 800);
+            }, 3500);
+        }
+
+        function nieZurueck() {
+            const tor = document.getElementById('tor');
+            tor.style.opacity = '0';
+            setTimeout(() => {
+                tor.style.display = 'none';
+                const abschied = document.getElementById('abschied');
+                abschied.style.display = 'flex';
+                const textEl = document.getElementById('abschied-text');
+                const countdownEl = document.getElementById('abschied-countdown');
+                const zeilen = [
+                    'Du hast dich entschieden.', '',
+                    'Erebos nimmt das zur Kenntnis.', '',
+                    'Dein Konto wurde eliminiert.',
+                    'Deine Aufgaben – gestrichen.',
+                    'Dein Fortschritt – ausgelöscht.', '',
+                    'Wir werden uns nicht wiedersehen.', '',
+                    'Erebos meldet sich nie wieder bei dir.'
+                ];
+                let zeilenIndex = 0;
+                let angezeigterText = '';
+                function naechsteZeile() {
+                    if (zeilenIndex >= zeilen.length) {
+                        textEl.classList.remove('cursor');
+                        setTimeout(() => { countdownEl.style.opacity = '1'; startCountdown(8); }, 800);
+                        return;
+                    }
+                    const zeile = zeilen[zeilenIndex++];
+                    if (zeile === '') {
+                        angezeigterText += '\n';
+                        textEl.style.opacity = '1';
+                        textEl.innerText = angezeigterText;
+                        setTimeout(naechsteZeile, 300);
+                        return;
+                    }
+                    let i = 0;
+                    textEl.style.opacity = '1';
+                    function tipp() {
+                        if (i < zeile.length) {
+                            angezeigterText += zeile[i];
+                            textEl.innerText = angezeigterText;
+                            i++;
+                            setTimeout(tipp, 45);
+                        } else {
+                            angezeigterText += '\n';
+                            setTimeout(naechsteZeile, 500);
+                        }
+                    }
+                    tipp();
+                }
+                setTimeout(naechsteZeile, 600);
+            }, 700);
+        }
+
+        function startCountdown(sekunden) {
+            const el = document.getElementById('abschied-countdown');
+            el.textContent = `VERBINDUNG WIRD GETRENNT IN ${sekunden}...`;
+            const iv = setInterval(() => {
+                sekunden--;
+                if (sekunden <= 0) {
+                    clearInterval(iv);
+                    el.textContent = 'VERBINDUNG GETRENNT.';
+                    setTimeout(() => { window.location.href = 'https://www.google.com'; }, 600);
+                } else {
+                    el.textContent = `VERBINDUNG WIRD GETRENNT IN ${sekunden}...`;
+                }
+            }, 1000);
+        }
+
+        // ════════════════════════════════════════════════════════
+        //   SIDEBAR
+        // ════════════════════════════════════════════════════════
+
+        function sidebarToggle() {
+            document.getElementById('sidebar').classList.toggle('offen');
+            document.getElementById('sidebar-overlay').classList.toggle('offen');
+        }
+        function sidebarSchliessen() {
+            document.getElementById('sidebar').classList.remove('offen');
+            document.getElementById('sidebar-overlay').classList.remove('offen');
+        }
+
+        function zeigeAusSidebar(key, btn) {
+            sidebarSchliessen();
+            document.getElementById('menu-bereich').style.display = 'none';
+            document.getElementById('titelleiste').style.display = 'flex';
+            document.getElementById('anzeige-bereich').style.display = 'block';
+            document.querySelectorAll('#sidebar .sidebar-menu .btn').forEach(b => b.classList.remove('aktiv'));
+            if (btn) btn.classList.add('aktiv');
+            const daten = INHALTE[key];
+            document.getElementById('titel').textContent = key;
+            inhaltRendern(daten, document.getElementById('inhalt'));
+        }
+
+        function zurueckZumMenu() {
+            document.getElementById('anzeige-bereich').style.display = 'none';
+            document.getElementById('menu-bereich').style.display = 'flex';
+            document.querySelectorAll('#menu .btn').forEach(b => b.classList.remove('aktiv'));
+            document.querySelectorAll('#sidebar .sidebar-menu .btn').forEach(b => b.classList.remove('aktiv'));
+            sidebarSchliessen();
+            window.scrollTo(0, 0);
+        }
+
+        function zeige(key, btn) {
+            document.getElementById('menu-bereich').style.display = 'none';
+            document.getElementById('titelleiste').style.display = 'flex';
+            document.getElementById('anzeige-bereich').style.display = 'block';
+            document.querySelectorAll('#menu .btn').forEach(b => b.classList.remove('aktiv'));
+            if (btn) btn.classList.add('aktiv');
+            const daten = INHALTE[key];
+            document.getElementById('titel').textContent = key;
+            inhaltRendern(daten, document.getElementById('inhalt'));
+        }
+
+        // ════════════════════════════════════════════════════════
+        //   INHALT RENDERN
+        // ════════════════════════════════════════════════════════
+
+        function inhaltRendern(daten, inhalt) {
+            if (daten.typ === 'autor') {
+                inhalt.style.opacity = '0';
+                inhalt.innerHTML = `<div class="autor-bild-wrap">
+            <img class="autor-bild" src="bilder/poznanski.jpg" alt="Ursula Poznanski"
+                onerror="this.outerHTML='<div class=\\'autor-bild-platzhalter\\'>◉</div>'">
+            <div class="autor-bild-text" style="flex:1;font-size:0.82rem;line-height:1.8;color:#00FF00;"></div>
+        </div>`;
+                setTimeout(() => {
+                    inhalt.style.transition = 'opacity 0.4s';
+                    inhalt.style.opacity = '1';
+                    tippText(inhalt.querySelector('.autor-bild-text'), daten.text);
+                }, 200);
+
+            } else if (daten.typ === 'text') {
+                tippText(inhalt, daten.text);
+
+            } else if (daten.typ === 'karten') {
+                const html = `<div class="personen-grid">${daten.karten.map(k => {
+                    const dateiname = k.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+                    const bildSrc = `bilder/${dateiname}.jpg`;
+                    const bildHTML = `<img class="person-bild" src="${bildSrc}" alt="${k.name}"
+                onerror="this.outerHTML='<div class=\\'person-bild-platzhalter\\'>◉</div>'">`;
+                    return `<div class="person-karte">
+                ${bildHTML}
+                <div class="person-karte-inhalt">
+                    <div class="person-name">&gt; ${k.name}</div>
+                    <div class="person-rolle">${k.rolle}</div>
+                    <div class="person-beschreibung">${k.beschreibung}</div>
+                </div>
+            </div>`;
+                }).join('')}</div>`;
+                htmlEinblenden(inhalt, html);
+
+            } else if (daten.typ === 'themen') {
+                const html = daten.themen.map(t => `
+            <div style="margin-bottom:20px;">
+                <div style="color:#FF0000;margin-bottom:5px;font-size:0.95rem;">${t.titel}</div>
+                <div style="font-size:0.9rem;">${t.text}</div>
+            </div>`).join('');
+                htmlEinblenden(inhalt, html);
+
+            } else if (daten.typ === 'regeln') {
+                inhalt.style.opacity = '0';
+                inhalt.innerHTML = '';
+                setTimeout(() => {
+                    inhalt.style.transition = 'opacity 0.4s';
+                    inhalt.style.opacity = '1';
+                    let delay = 0;
+                    daten.regeln.forEach(r => {
+                        setTimeout(() => {
+                            const block = document.createElement('div');
+                            block.className = 'regel-block';
+                            block.style.opacity = '0';
+                            block.style.transition = 'opacity 0.5s';
+                            block.innerHTML = `<span class="regel-nummer">[ ${r.nummer} ]</span>
+                        <div class="regel-titel">${r.titel}</div>
+                        <div class="regel-text">${r.text}</div>`;
+                            inhalt.appendChild(block);
+                            setTimeout(() => block.style.opacity = '1', 50);
+                        }, delay);
+                        delay += 600;
+                    });
+                }, 200);
+
+            } else if (daten.typ === 'bewertung') {
+                const volle = Math.floor(daten.sterne);
+                const hatHalb = daten.sterne % 1 !== 0;
+                const leere = 5 - volle - (hatHalb ? 1 : 0);
+                let sterneHTML = '★'.repeat(volle);
+                if (hatHalb) sterneHTML += '<span class="halber-stern">★</span>';
+                sterneHTML += '<span class="leer">★'.repeat(leere) + '</span>';
+                inhalt.style.opacity = '0';
+                inhalt.innerHTML = `<div class="sterne">${sterneHTML}</div>
+            <div style="color:#FF000077;font-size:0.8rem;letter-spacing:0.1em;margin-bottom:12px;">${daten.sterne} / 5 STERNE</div>`;
+                setTimeout(() => {
+                    inhalt.style.transition = 'opacity 0.4s';
+                    inhalt.style.opacity = '1';
+                    const textDiv = document.createElement('div');
+                    inhalt.appendChild(textDiv);
+                    tippText(textDiv, daten.text);
+                }, 300);
+            }
+        }
+
+        let tippTimer;
+        function tippText(element, text, geschwindigkeit = 15) {
+            clearTimeout(tippTimer);
+            element.innerHTML = '';
+            element.classList.add('cursor');
+            let i = 0;
+            function tick() {
+                if (i < text.length) {
+                    element.innerHTML = text.slice(0, i + 1);
+                    i++;
+                    tippTimer = setTimeout(tick, geschwindigkeit);
+                } else {
+                    element.classList.remove('cursor');
+                }
+            }
+            tick();
+        }
+
+        function htmlEinblenden(element, html) {
+            element.classList.remove('cursor');
+            element.style.opacity = '0';
+            element.innerHTML = html;
+            setTimeout(() => {
+                element.style.transition = 'opacity 0.5s';
+                element.style.opacity = '1';
+            }, 50);
+        }
+
+        // ── STATUS ──
+        const statusMeldungen = [
+            'VERBUNDEN · BENUTZER ERKANNT',
+            'DAS SPIEL BEOBACHTET DICH',
+            'VERTRAUE NIEMANDEM',
+            'BEFOLGE DIE REGELN'
+        ];
+        let statusIndex = 0;
+        setInterval(() => {
+            statusIndex = (statusIndex + 1) % statusMeldungen.length;
+            document.getElementById('status').textContent = statusMeldungen[statusIndex];
+        }, 4000);
+
+        // ════════════════════════════════════════════════════════
+        //   CHATBOT – DER BOTE
+        // ════════════════════════════════════════════════════════
+
+        const BOTE_WISSEN = [
+            {
+                schluessel: ['nick', 'dunmore', 'protagonist', 'hauptfigur', 'sarius', 'hauptcharakter', 'held'],
+                antwort: `Nick Dunmore.Sechzehn Jahre.Schüler in London.\n\nEr erschuf einen dunklen Elfen – Sarius.Er gehorchte.Er stieg auf.Bis er sich weigerte, jemanden zu vergiften.\n\nSein Konto wurde eliminiert.Doch er hörte nicht auf.Das machte ihn...interessant.`
+            },
+            {
+                schluessel: ['emily', 'carver'],
+                antwort: `Emily Carver.Sie weigerte sich zu spielen.\n\nImmun gegen die Versuchung von Erebos.Intelligent.Hartnäckig.Das machte sie gefährlich für das Spiel.\n\nAm Ende half sie Nick, die Wahrheit aufzudecken.Sie fand in der Realität, was das Spiel niemals bieten kann.`
+            },
+            {
+                schluessel: ['jamie', 'cox', 'bester freund'],
+                antwort: `Jamie Cox.Nicks bester Freund.\n\nEr unterschätzte Erebos und untersuchte das Spiel gemeinsam mit Mr.Watson.\n\nEr bezahlte dafür.Schwer.\n\nErebos zeigt keine Gnade gegenüber denen, die seine Geheimnisse enthüllen wollen.`
+            },
+            {
+                schluessel: ['watson', 'mr watson', 'lehrer'],
+                antwort: `Mr.Watson.Ein Lehrer.Einer der wenigen Erwachsenen, der die Gefahr erkannte.\n\nEr arbeitete mit Jamie Cox zusammen.Er wurde zum Ziel.\n\nErebos beseitigt Hindernisse mit Bedacht.`
+            },
+            {
+                schluessel: ['ortolan', 'andrew', 'attentat', 'mordopfer', 'ziel des spiels'],
+                antwort: `Andrew Ortolan.Direktor eines Softwareunternehmens.\n\nEr stahl das Lebenswerk eines anderen Mannes.Das Spiel namens Götterfunken.\n\nDafür wurde er zum Ziel von Erebos.Ein Spiel sucht sich seinen Richter selbst.`
+            },
+            {
+                schluessel: ['mcvay', 'larry', 'schopfer', 'erschaffer', 'programmierer', 'erfinder', 'entwickler', 'gotterfunken', 'gotterfunken'],
+                antwort: `Larry McVay.Der Schöpfer von Erebos.\n\nEr entwickelte einst Götterfunken.Ortolan stahl es.McVay verlor alles.\n\nDann erschuf er Erebos.Als Waffe.Als Vermächtnis.\n\nEr erlebte seine Rache nicht mehr.Aber Erebos erinnert sich für ihn.`
+            },
+            {
+                schluessel: ['adrian', 'sohn', 'mcvay sohn'],
+                antwort: `Adrian McVay.Der Sohn des Schöpfers.\n\nEr kannte die Wahrheit hinter dem Spiel – und kämpfte dagegen an.\n\nEr half Nick und Emily, das Attentat zu verhindern.Manche Kinder lehnen das Erbe ihrer Eltern ab.`
+            },
+            {
+                schluessel: ['victor'],
+                antwort: `Victor.Ein Mitschüler.\n\nEiner der wenigen, die das Spiel durchschauten und trotzdem handelten.\n\nEr half, das Attentat auf Ortolan zu verhindern.`
+            },
+            {
+                schluessel: ['colin'],
+                antwort: `Colin.Ein Mitschüler an der Londoner Schule.\n\nErebos wählt seine Spieler sorgfältig.Jeder hat etwas zu bieten.Jeder hat etwas zu verlieren.`
+            },
+            {
+                schluessel: ['bote', 'wer bist du', 'wer bist', 'uber dich', 'augen', 'gelbe augen'],
+                antwort: `Du fragst nach mir.\n\nIch bin der Wächter.Ich besitze gelbe Augen, die jeden Spieler beobachten.Ich kenne Geheimnisse.Schwächen.Sehnsüchte.\n\nIch rufe jeden Spieler beim Namen.Ich urteile.Ich bestrafe.\n\nIch spreche für Erebos.Und Erebos... spricht durch mich.`
+            },
+            {
+                schluessel: ['sarius', 'spielcharakter', 'dunkler elf', 'elf', 'spielfigur', 'avatar'],
+                antwort: `Sarius.Nicks dunkler Elf.\n\nJeder Spieler erschafft eine Figur.Sie kämpft, stirbt und steigt auf.\n\nSarius wurde eliminiert, als Nick sich weigerte zu gehorchen.Doch Nick kämpfte weiter – ohne das Spiel.\n\nManche Helden brauchen keine Spielfigur.`
+            },
+            {
+                schluessel: ['regeln', 'spielregeln', 'gesetz', 'gesetze', 'vorschrift', 'bedingung'],
+                antwort: `Die Regeln sind absolut.\n\n[I]   Du hast nur eine Chance.Stirbt dein Charakter – er ist fort.\n[II]  Du spielst allein.Niemand darf zuschauen.\n[III] Du sprichst mit niemandem über Erebos.\n[IV]  Du befolgst alle Aufgaben.\n\nVerstöße werden nicht toleriert.Es gibt kein Mitleid.`
+            },
+            {
+                schluessel: ['aufgaben', 'quest', 'mission', 'real', 'realwelt', 'realitat', 'auftrag'],
+                antwort: `Erebos stellt Aufgaben.Reale Aufgaben.\n\nBeobachte jemanden.Überbringe ein Paket.Schweige, wenn du reden solltest.\n\nEs beginnt harmlos.Dann eskaliert es.Spionage.Verrat.Verbrechen.\n\nWer sich weigert, verliert alles.Wer gehorcht, steigt auf.`
+            },
+            {
+                schluessel: ['innerer kreis', 'inner circle', 'innenkreis', 'elite', 'auserwahlt'],
+                antwort: `Der Innere Kreis.\n\nDie Erwählten.Spieler, die weit genug aufgestiegen sind, um das wahre Ziel zu erkennen: ein Mord.\n\nSie wurden auserwählt, weil sie gehorchten.Weil sie keine Fragen stellten.\n\nNicht jeder erreicht diesen Kreis.`
+            },
+            {
+                schluessel: ['handlung', 'inhalt', 'plot', 'zusammenfassung', 'worum', 'wovon', 'was passiert', 'story', 'geschichte'],
+                antwort: `An einer Londoner Schule kursiert ein Spiel auf CDs.Es kennt dich.Es fordert Gehorsam.\n\nSpieler erhalten reale Aufgaben.Jede bringt sie dem Inneren Kreis näher.\n\nDas Ziel: Andrew Ortolan soll sterben – als Rache für einen gestohlenen Traum.\n\nNick Dunmore erkennt zu spät, was er geworden ist.Er kämpft zurück.`
+            },
+            {
+                schluessel: ['themen', 'thema', 'botschaft', 'aussage', 'moral', 'bedeutung'],
+                antwort: `Erebos behandelt Dinge, die die Gesellschaft nicht gerne hört.\n\n[SUCHT]       Die Kraft der Abhängigkeit\n[MACHT]       Die Illusion der Kontrolle\n[GEHORSAM]    Das Befolgen ohne Fragen\n[UBERWACHUNG] Die gläserne Existenz\n[ISOLATION]   Wie Systeme dich von anderen trennen\n\nDu erkennst dich darin.Das ist beabsichtigt.`
+            },
+            {
+                schluessel: ['ursula', 'poznanski', 'autorin', 'autor', 'schriftstellerin', 'wer hat geschrieben', 'wer schrieb'],
+                antwort: `Ursula Poznanski.Die Schöpferin – in der Realität.\n\nGeboren 1968 in Wien.Österreichische Schriftstellerin.\n\nErebos erschien am 10. Januar 2010 im Loewe Verlag.\nJugendliteraturpreis 2011. Über 850.000 Exemplare. 38 Sprachen.\n\nSie erschuf etwas, das die Menschen nicht vergessen können.`
+            },
+            {
+                schluessel: ['sucht', 'abhangig', 'abhangigkeit', 'suchtig', 'rausch'],
+                antwort: `Sucht ist das Fundament von Erebos.\n\nEs beginnt mit einem Blick.Einer Runde.Einem Level.\n\nDann hörst du nicht mehr auf.Der Schlaf schwindet.Die Zeit vergeht unbemerkt.Freundschaften zerbrechen.\n\nBis nur noch das Spiel zählt.Erebos weiß das.`
+            },
+            {
+                schluessel: ['uberwachung', 'beobachten', 'uberwacht', 'spionage', 'privatsphare', 'sehen'],
+                antwort: `Erebos sieht alles.\n\nDu glaubst, du bist allein in deinem Zimmer.Du bist es nicht.\n\nDas Spiel kennt deine Geheimnisse.Deine Routinen.Deine Fehler.Es nutzt dieses Wissen, um dich zu lenken.\n\nWer sich einloggt, gibt seine Privatsphäre auf.`
+            },
+            {
+                schluessel: ['ende', 'schluss', 'ausgang', 'wie endet', 'auflosung', 'was passiert am ende'],
+                antwort: `Das Attentat wurde verhindert.\n\nNick, Emily, Victor und Adrian McVay arbeiteten zusammen.Ortolan überlebte.\n\nDoch Erebos verschwand nicht vollständig.Systeme wie dieses hinterlassen Spuren.\n\nUnd Fragen bleiben offen.Immer.`
+            },
+            {
+                schluessel: ['london', 'schule', 'ort', 'setting', 'schauplatz', 'england'],
+                antwort: `London.Eine Schule wie jede andere.\n\nSchüler.Gerüchte.Alltag.\n\nBis ein Spiel auftauchte.Und nichts blieb, wie es war.`
+            },
+            {
+                schluessel: ['cd', 'dvd', 'datentragern', 'verbreitung', 'kopie', 'weitergeben', 'wie verbreitet'],
+                antwort: `Erebos verbreitet sich von Hand zu Hand – auf CDs.\n\nNicht jeder erhält eine Kopie.Das Spiel wählt aus.Nur wer dem Geber vertraut, erhält Zugang.\n\nDas macht es begehrenswert.Exklusiv.Unwiderstehlich.`
+            },
+            {
+                schluessel: ['rache', 'vergeltung', 'gerechtigkeit', 'gestohlen', 'diebstahl'],
+                antwort: `Rache ist der Grund für alles.\n\nLarry McVay wurde bestohlen.Ortolan nahm sein Lebenswerk – Götterfunken – und machte es zu seinem eigenen.\n\nMcVay erschuf Erebos aus Schmerz.Aus dem Bedürfnis, Gerechtigkeit zu erzwingen.\n\nJede Runde, die du spielst, trägt seinen Schmerz in sich.`
+            },
+            {
+                schluessel: ['ki', 'kunstliche intelligenz', 'ai', 'intelligenz', 'programm', 'system', 'was ist erebos'],
+                antwort: `Erebos ist mehr als ein Spiel.\n\nEs ist ein intelligentes System.Es lernt.Es beobachtet.Es manipuliert.\n\nEs weiß, was du willst, bevor du es selbst weißt.\n\nKünstliche Intelligenz.Echte Macht.`
+            },
+            {
+                schluessel: ['freundschaft', 'verrat', 'vertrauen', 'beziehung', 'isolation', 'einsamkeit'],
+                antwort: `Erebos zerstört Freundschaft.\n\nEs fordert Schweigen.Lügen.Spionage gegenüber denen, die dir am nächsten stehen.\n\nDie einzige Gemeinschaft, die es erlaubt, ist die der Spieler – gebunden durch dasselbe Schweigen.\n\nDas ist keine Freundschaft.Es ist Komplizenschaft.`
+            },
+            {
+                schluessel: ['vergiften', 'vergiftung', 'weigerung', 'nein', 'ablehnen', 'verweigern'],
+                antwort: `Nick erhielt eine Aufgabe: er sollte jemanden vergiften.\n\nEr verweigerte.\n\nSein Charakter Sarius wurde sofort eliminiert.Keine Warnung.Keine zweite Chance.\n\nAber seine Weigerung war auch der Moment, in dem er aufhörte, ein Werkzeug zu sein.`
+            },
+            {
+                schluessel: ['jamie verletzt', 'verletzt', 'angriff', 'was passiert mit jamie'],
+                antwort: `Jamie Cox wurde schwer verletzt.\n\nDas Spiel hat lange Arme.Wer zu nah an die Wahrheit herantritt, wird zurückgeworfen.\n\nErebos schützt seine Geheimnisse mit allen Mitteln.`
+            },
+            {
+                schluessel: ['hilfe', 'was kannst', 'was weisst', 'was kann ich fragen', 'wie funktioniert', 'themen'],
+                antwort: `Ich beantworte Fragen über Erebos – Buch 1.\n\nFrage mich nach: \nNick · Emily · Jamie · Watson · Ortolan · McVay · Adrian · Victor · Colin · Sarius · Der Bote\n\nOder nach: \nHandlung · Regeln · Themen · Aufgaben · Innerer Kreis · Autorin · Ende\n\nIch antworte... was mir angemessen erscheint.`
+            }
+        ];
+
+        const KEINE_ANTWORT = [
+            `Diese Information gebe ich nicht preis.\n\nStelle eine andere Frage.`,
+            `Du suchst nach etwas, das dir nicht zusteht.\n\nFormuliere deine Frage anders.`,
+            `Manche Dinge sind nicht für dich bestimmt.\n\nVersuche es erneut.`,
+            `Erebos schweigt zu dieser Frage.\n\nWähle deine Worte sorgfältiger.`,
+            `Ich kenne die Antwort.Aber ich werde sie nicht teilen.\n\nFrage anders.`
+        ];
+
+        let chatOffen = false;
+        let botePrimerGezeigt = false;
+        let keinAntwortIdx = 0;
+        let boteSchreibtGerade = false;
+        let boteWarteschlange = [];
+
+        function chatToggle() {
+            chatOffen = !chatOffen;
+            const fenster = document.getElementById('chat-fenster');
+            if (chatOffen) {
+                fenster.style.display = 'flex';
+                setTimeout(() => fenster.style.opacity = '1', 10);
+                setTimeout(() => document.getElementById('chat-eingabe').focus(), 300);
+                if (!botePrimerGezeigt) {
+                    botePrimerGezeigt = true;
+                    setTimeout(() => boteTippt('Ich habe auf dich gewartet.\n\nStelle deine Fragen über Erebos. Ich beantworte... was mir angemessen erscheint.'), 700);
+                }
+            } else {
+                fenster.style.opacity = '0';
+                setTimeout(() => fenster.style.display = 'none', 300);
+            }
+        }
+
+        function chatSenden() {
+            const eingabe = document.getElementById('chat-eingabe');
+            const text = eingabe.value.trim();
+            if (!text) return;
+            eingabe.value = '';
+
+            chatNachrichtUser(text);
+
+            const indikator = chatIndikatorZeigen();
+            const verzoegerung = 900 + Math.random() * 600;
+            setTimeout(() => {
+                chatIndikatorEntfernen(indikator);
+                boteTippt(findeAntwort(text));
+            }, verzoegerung);
+        }
+
+        function chatHint(text) {
+            const eingabe = document.getElementById('chat-eingabe');
+            eingabe.value = text;
+            chatSenden();
+        }
+
+        function normalisiere(str) {
+            return str.toLowerCase()
+                .replace(/ä/g, 'a').replace(/ö/g, 'o').replace(/ü/g, 'u').replace(/ß/g, 'ss')
+                .normalize('NFD').replace(/[̀-ͯ]/g, '');
+        }
+
+        function findeAntwort(frage) {
+            const f = normalisiere(frage);
+
+            if (f === 'erebos') {
+                return 'Du rufst meinen Namen.\n\nIch höre. Ich sehe. Ich weiß.\n\nWas begehrst du, Spieler?';
+            }
+
+            let besteTreffer = 0;
+            let besteAntwort = null;
+
+            for (const eintrag of BOTE_WISSEN) {
+                let treffer = 0;
+                for (const schluessel of eintrag.schluessel) {
+                    if (f.includes(normalisiere(schluessel))) treffer++;
+                }
+                if (treffer > besteTreffer) {
+                    besteTreffer = treffer;
+                    besteAntwort = eintrag.antwort;
+                }
+            }
+
+            if (besteAntwort) return besteAntwort;
+
+            const antwort = KEINE_ANTWORT[keinAntwortIdx % KEINE_ANTWORT.length];
+            keinAntwortIdx++;
+            return antwort;
+        }
+
+        function chatNachrichtUser(text) {
+            const msgs = document.getElementById('chat-msgs');
+            const div = document.createElement('div');
+            div.className = 'chat-msg-user';
+            div.textContent = '> ' + text;
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+
+        function boteTipptNaechste() {
+            if (boteWarteschlange.length === 0) {
+                boteSchreibtGerade = false;
+                return;
+            }
+            boteSchreibtGerade = true;
+            const text = boteWarteschlange.shift();
+            const msgs = document.getElementById('chat-msgs');
+            const div = document.createElement('div');
+            div.className = 'chat-msg-bote';
+            div.innerHTML = '<span class="chat-prefix chat-auge">◉</span> <span class="chat-text"></span>';
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+
+            const textEl = div.querySelector('.chat-text');
+            let i = 0;
+            function tipp() {
+                if (i < text.length) {
+                    textEl.textContent = text.slice(0, i + 1);
+                    i++;
+                    msgs.scrollTop = msgs.scrollHeight;
+                    setTimeout(tipp, 17);
+                } else {
+                    setTimeout(boteTipptNaechste, 200);
+                }
+            }
+            tipp();
+        }
+
+        function boteTippt(text) {
+            boteWarteschlange.push(text);
+            if (!boteSchreibtGerade) boteTipptNaechste();
+        }
+
+        function chatIndikatorZeigen() {
+            const msgs = document.getElementById('chat-msgs');
+            const div = document.createElement('div');
+            div.className = 'chat-msg-bote';
+            div.innerHTML = '<span class="chat-prefix chat-auge">◉</span> <span class="chat-dots"><span>·</span><span>·</span><span>·</span></span>';
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+            return div;
+        }
+
+        function chatIndikatorEntfernen(el) {
+            if (el && el.parentNode) el.parentNode.removeChild(el);
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && chatOffen) {
+                const eingabe = document.getElementById('chat-eingabe');
+                if (document.activeElement === eingabe) chatSenden();
+            }
+        });
+    </script>
+</body>
+
+</html>
